@@ -1,0 +1,107 @@
+<template>
+    <div class="box">
+        <flexbox>
+            <flexbox-item>
+                <group>
+                    <cell title="详细信息"></cell>
+                    <cell-form-preview :list="list"></cell-form-preview>
+                </group>
+                <divider>{{ "您的凭证" }}</divider>
+                <qrcode style="text-align:center" value="https://vux.li?x-page=demo_qrcode" type="img"></qrcode>
+            </flexbox-item>
+        </flexbox>
+    </div>
+</template>
+<script>
+    import {
+        Flexbox,
+        FlexboxItem,
+        Group,
+        Cell,
+        XInput,
+        XTextarea,
+        XButton,
+        XNumber,
+        PopupRadio,
+        CellFormPreview,
+        Qrcode,
+        Divider,
+        Datetime,
+        PopupPicker
+    } from 'vux'
+export default {
+      name: '',
+      components: {
+        Flexbox,
+        FlexboxItem,
+        Group,
+        Cell,
+        XInput,
+        XTextarea,
+        XButton,
+        XNumber,
+        PopupRadio,
+        CellFormPreview,
+        Qrcode,
+        Divider,
+        Datetime,
+        PopupPicker
+      },
+      data () {
+        return {
+          list: [{
+            label: '访客姓名',
+            value: '小豪'
+          },
+          {
+            label: '访客手机',
+            value: '12574585522'
+          },
+          {
+            label: '员工姓名',
+            value: '唐经理'
+          },
+          {
+            label: '员工手机',
+            value: '12574585522'
+          },
+          {
+            label: '邀访事由',
+            value: '预约参观'
+          },
+          {
+            label: '来访人数',
+            value: '1'
+          },
+          {
+            label: '拜访时间',
+            value: '2018-9-21 15:40'
+          },
+          {
+            label: '身份证号',
+            value: '350123199605190815'
+          },
+          {
+            label: '车牌号',
+            value: '闽A1254'
+          },
+          {
+            label: '见面地址',
+            value: '星网锐捷海西科技园'
+          }
+          ]
+        }
+      }
+    }
+</script>
+<style>
+    .box {
+        margin: 20px;
+        text-align: center;
+    }
+
+    .liststyle {
+        color: black !important;
+        text-align: center;
+    }
+</style>

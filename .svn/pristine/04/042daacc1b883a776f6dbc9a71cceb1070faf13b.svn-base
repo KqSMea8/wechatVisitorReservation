@@ -1,0 +1,599 @@
+<template>
+  <div class="appointmentBox">
+    <flexbox>
+      <flexbox-item>
+        <p class="theme">请填写您的信息</p>
+        <form>
+          <fieldset>
+            <legend>对方手机</legend>
+            <x-input type="text"
+                     mask="99999999999"
+                     is-type="china-mobile"
+                     v-model="data.phone"
+                     name="mobile"
+                     required
+                     style="position:static"></x-input>
+          </fieldset>
+        </form>
+        <form>
+          <fieldset>
+            <legend>访问时间</legend>
+            <datetime-range title=""
+                            :start-date="startDate"
+                            :end-date="endDate"
+                            :format="'YYYY年MM月DD日'"
+                            v-model="value"
+                            @on-change="onChange"
+                            class="test"></datetime-range>
+          </fieldset>
+        </form>
+
+        <form>
+          <fieldset>
+            <legend>到访人数</legend>
+            <popup-picker title=" "
+                          :data="list1"
+                          v-model="value1"
+                          @on-show="onShow"
+                          @on-hide="onHide"
+                          @on-change="onChange"
+                          class="test"
+                          required
+                          style="position:static"></popup-picker>
+          </fieldset>
+        </form>
+        <form>
+          <fieldset>
+            <legend>到访事由</legend>
+            <popup-picker title=" "
+                          :data="list2"
+                          v-model="value2"
+                          @on-show="onShow"
+                          @on-hide="onHide"
+                          @on-change="onChange"
+                          class="test"
+                          style="position:static"></popup-picker>
+          </fieldset>
+          <fieldset>
+            <legend>车牌号码</legend>
+            <x-input type="text"
+                     placeholder="(选填)如：闽A12345"
+                     @on-focus="onFocus"
+                     @on-blur="onBlur"
+                     style="position:static"></x-input>
+          </fieldset>
+          <div class="uploadImg">
+            <img style="vertical-align: middle;" :src="faceImg" height="100" width="100">
+            <a href="javascript:;"
+               class="file">上传人脸吧
+              <input type="file"
+                           @change="getFaceImg"
+                           ref="faceFile"
+                           accept="image/png,image/jpeg"
+                           multiple/>
+            </a>
+          </div>
+          <div class="uploadImg">
+            <img style="vertical-align: middle;" :src="IDPosImg" height="100" width="100">
+
+            <a href="javascript:;"
+               class="file">上传身份证正面
+              <input type="file"
+                           @change="getIDPosImg"
+                           ref="IDPosFile"
+                           accept="image/png,image/jpeg"
+                           multiple/>
+            </a>
+          </div>
+          <div class="uploadImg">
+            <img style="vertical-align: middle;" :src="IDNegImg" height="100" width="100">
+
+            <a href="javascript:;"
+               class="file">上传身份证反面
+              <input type="file"
+                           @change="getIDNegImg"
+                           ref="IDNegFile"
+                           accept="image/png,image/jpeg"
+                           multiple/>
+            </a>
+          </div>
+        </form>
+      </flexbox-item>
+    </flexbox>
+    <flexbox>
+      <flexbox-item>
+        <x-button type="primary"
+                  @click.native="showPosition('middle')">预约</x-button>
+      </flexbox-item>
+      <toast v-model="showPositionValue"
+             type="text"
+             :time="800"
+             is-show-mask
+             text="预约成功"
+             @on-hide="skip"
+             :position="position">{{
+        'Basic Usage' }}</toast>
+    </flexbox>
+  </div>
+
+</template>
+
+
+<script>
+import { getWxConfigInfo } from '@/api/api.js'
+import {
+  Flexbox,
+  FlexboxItem,
+  Group,
+  Cell,
+  XInput,
+  XTextarea,
+  XButton,
+  XNumber,
+  PopupRadio,
+  CellFormPreview,
+  Qrcode,
+  Divider,
+  Datetime,
+  PopupPicker,
+  DatetimeRange,
+  Toast
+} from 'vux'
+import { mapState } from 'vuex'
+export default {
+  name: '',
+  components: {
+    Flexbox,
+    FlexboxItem,
+    Group,
+    Cell,
+    XInput,
+    XTextarea,
+    XButton,
+    XNumber,
+    PopupRadio,
+    CellFormPreview,
+    Qrcode,
+    Divider,
+    Datetime,
+    PopupPicker,
+    DatetimeRange,
+    Toast
+  },
+  data () {
+    return {
+      wxConfig: {
+        jsapi_ticket: '',
+        nonceStr: '',
+        signature: '',
+        timestamp: ''
+      },
+      data: {
+        phone: '',
+        IDcard: ''
+      },
+      position: 'default',
+      showPositionValue: false,
+      startDate: '',
+      endDate: '',
+      msg: '',
+      value: ['2018-9-07', '18', '50'],
+      title1: '请选择人数',
+      title2: '预约参观',
+      list1: [
+        ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10人及其以上']
+      ],
+      list2: [
+        ['预约参观', '邀请访问']
+      ],
+      value1: ['请选择人数'],
+      value2: ['预约参观'],
+      faceImg: 'http://bpic.588ku.com/element_origin_min_pic/01/47/02/12574338a640011.jpg',
+      IDPosImg: 'http://bpic.588ku.com/element_origin_min_pic/01/47/02/12574338a640011.jpg',
+      IDNegImg: 'http://bpic.588ku.com/element_origin_min_pic/01/47/02/12574338a640011.jpg',
+      faceImgFile: '',
+      IDPosImgFile: '',
+      IDNegImgFile: ''
+    }
+  },
+  computed: {
+    ...mapState({
+      imgStatus: state => state.imgstore.img_status,
+      imgPaths: state => state.imgstore.img_paths
+    })
+  },
+  methods: {
+    // 获取微信 config 信息
+    _getWxConfigInfo () {
+      let url = location.href.split('#')[0] // 获取锚点之前的链接
+      console.log(url)
+      getWxConfigInfo(url).then((res) => {
+        console.log(res)
+        this.$wechat.config({
+          debug: true, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+          appId: 'wx736a4d699576f696', // 必填，公众号的唯一标识
+          timestamp: res.data.timestamp, // 必填，生成签名的时间戳
+          nonceStr: res.data.nonceStr, // 必填，生成签名的随机串
+          signature: res.data.signature, // 必填，签名
+          jsApiList: ['chooseImage', 'previewImage', 'uploadImage', 'downloadImage'] // 必填，需要使用的JS接口列表
+        })
+        this.$wechat.ready(function () {
+          console.log('验证成功')
+          // config信息验证后会执行ready方法，所有接口调用都必须在config接口获得结果之后，config是一个客户端的异步操作，所以如果需要在页面加载时就调用相关接口，则须把相关接口放在ready函数中调用来确保正确执行。对于用户触发时才调用的接口，则可以直接调用，不需要放在ready函数中。
+        })
+        this.$wechat.error(function (res) {
+          console.log('验证失败')
+          // config信息验证失败会执行error函数，如签名过期导致验证失败，具体错误信息可以打开config的debug模式查看，也可以在返回的res参数中查看，对于SPA可以在这里更新签名。
+        })
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+    // 获取人脸图片
+    getFaceImg () {
+      let vm = this
+      let files = this.$refs.faceFile.files[0]
+      console.log(files)
+      vm.faceImgFile = files
+      console.log(1)
+      // 预览图片
+      let reader = new FileReader()
+      reader.addEventListener('load', function () {
+        vm.faceImg = reader.result
+      }, false)
+      if (files) {
+        reader.readAsDataURL(files)
+      }
+      console.log(vm.faceImg)
+      // this._picValidate(files)
+    },
+    // 获取身份证正面图片
+    getIDPosImg () {
+      let vm = this
+      let files = this.$refs.IDPosFile.files[0]
+      vm.IDPosImgFile = files
+      // 预览图片
+      let reader = new FileReader()
+      reader.addEventListener('load', function () {
+        vm.IDPosImg = reader.result
+      }, false)
+      if (files) {
+        reader.readAsDataURL(files)
+      }
+      this._picValidate(files)
+    },
+    // 获取身份证反面图片
+    getIDNegImg () {
+      let vm = this
+      let files = this.$refs.IDNegFile.files[0]
+      vm.IDNegImgFile = files
+      // 预览图片
+      let reader = new FileReader()
+      reader.addEventListener('load', function () {
+        vm.IDNegImg = reader.result
+      }, false)
+      if (files) {
+        reader.readAsDataURL(files)
+      }
+      this._picValidate(files)
+    },
+    isVehicleNo (str) {
+      return /^(([\u4E00-\u9FA5][A-Z](([0-9]{5}[DF])|([DF]([A-HJ-NP-Z0-9])[0-9]{4})))|([\u4E00-\u9FA5][A-Z][A-HJ-NP-Z0-9]{4}[A-HJ-NP-Z0-9挂学警港澳使领]))$/
+        .test(
+          str
+        )
+    },
+    isIDcard (val) {
+      if (val) {
+        if (!this.IdentityCodeValid(val) === true) {
+          event.target.parentNode.parentNode.classList.add('weui-cell_warn')
+        } else {
+          if (
+            event.target.parentNode.parentNode.classList.contains(
+              'weui-cell_warn'
+            )
+          ) {
+            event.target.parentNode.parentNode.classList.remove(
+              'weui-cell_warn'
+            )
+          }
+        }
+      }
+    },
+    IdentityCodeValid (code) {
+      var city = {
+        11: '北京',
+        12: '天津',
+        13: '河北',
+        14: '山西',
+        15: '内蒙古',
+        21: '辽宁',
+        22: '吉林',
+        23: '黑龙江 ',
+        31: '上海',
+        32: '江苏',
+        33: '浙江',
+        34: '安徽',
+        35: '福建',
+        36: '江西',
+        37: '山东',
+        41: '河南',
+        42: '湖北 ',
+        43: '湖南',
+        44: '广东',
+        45: '广西',
+        46: '海南',
+        50: '重庆',
+        51: '四川',
+        52: '贵州',
+        53: '云南',
+        54: '西藏 ',
+        61: '陕西',
+        62: '甘肃',
+        63: '青海',
+        64: '宁夏',
+        65: '新疆',
+        71: '台湾',
+        81: '香港',
+        82: '澳门',
+        91: '国外'
+      }
+      var tip = ''
+      var pass = true
+
+      if (
+        !code ||
+        !/^\d{6}(18|19|20)?\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}(\d|X)$/i.test(
+          code
+        )
+      ) {
+        tip = '身份证号格式错误'
+        pass = false
+      } else if (!city[code.substr(0, 2)]) {
+        tip = '地址编码错误'
+        pass = false
+      } else {
+        // 18位身份证需要验证最后一位校验位
+        if (code.length === 18) {
+          code = code.split('')
+          // ∑(ai×Wi)(mod 11)
+          // 加权因子
+          var factor = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
+          // 校验位
+          var parity = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2]
+          var sum = 0
+          var ai = 0
+          var wi = 0
+          for (var i = 0; i < 17; i++) {
+            ai = code[i]
+            wi = factor[i]
+            sum += ai * wi
+          }
+          // var last = parity[sum % 11]
+          if (parity[sum % 11] !== code[17]) {
+            tip = '校验位错误'
+            pass = false
+          }
+        }
+      }
+      if (!pass) alert(tip)
+      return pass
+    },
+    upload () {
+      this.$store.commit('set_img_status', 'uploading')
+    },
+
+    onFocus (val) {
+      console.log(val)
+    },
+    onBlur (val) {
+      console.log(val)
+      console.log(this.isVehicleNo(val))
+      console.log(!this.isVehicleNo(val))
+      if (val) {
+        if (!this.isVehicleNo(val) === true) {
+          event.target.parentNode.parentNode.classList.add('weui-cell_warn')
+        } else {
+          if (
+            event.target.parentNode.parentNode.classList.contains(
+              'weui-cell_warn'
+            )
+          ) {
+            event.target.parentNode.parentNode.classList.remove(
+              'weui-cell_warn'
+            )
+          }
+        }
+      }
+    },
+    onChange (val) {
+      console.log('change', val)
+    },
+    onShow () {
+      console.log('on show')
+    },
+    onHide (type) {
+      console.log('on hide', type)
+    },
+    getDate () { // 设置时间基本参数
+      let date = new Date()
+      let year = date.getFullYear()
+      let month = date.getMonth() + 1
+      let day = date.getDate()
+      let hour = date.getHours()
+      let minute = date.getMinutes()
+      // 格式化时间
+      month = month < 10 ? '0' + month : month
+      day = day < 10 ? '0' + day : day
+      hour = hour < 10 ? '0' + hour : hour
+      minute = minute < 10 ? '0' + minute : minute
+      // 生成起始时间
+      let startDate = year + '-' + month + '-' + day + ' ' + hour + ':' + minute
+      let endMonth = parseInt(month) + 7
+      // 判断边界条件
+      if (endMonth > 12) {
+        year++
+        endMonth -= 12
+      }
+      // 生成截至时间
+      let endDate = year + '-' + endMonth + '-' + day + ' ' + hour + ':' + minute
+      this.startDate = startDate
+      this.endDate = endDate
+    },
+    showPosition (position) {
+      this.position = position
+      this.showPositionValue = true
+    },
+    onChange1 (val) {
+      // const _this = this
+      if (val) {
+        this.$vux.toast.show({
+          text: 'Hello World'
+        })
+      } else {
+        this.$vux.toast.hide()
+      }
+    },
+    skip () {
+      this.$router.push({
+        path: '/index1'
+      })
+    },
+    submit () {
+      let values = []
+      for (let key of this.imgPaths) {
+        values.push(key)
+      }
+      this.imgs = values
+      console.log(this.imgs)
+    },
+    _picValidate (files) {
+      // 校验非法字符
+      var pattern = new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？]")
+      var rs = ''
+      for (let i = 0; i < files.name.length; i++) {
+        rs = rs + files.name.substr(i, 1).replace(pattern, '')
+      }
+
+      // 校验文件后缀
+      let extension = files.name.split('.')[1] === 'png'
+      let extension2 = files.name.split('.')[1] === 'jpg'
+      let extension3 = files.name.split('.')[1] === 'jpge'
+      if (!extension && !extension2 && !extension3) {
+        alert('只能选择jpg/png文件！')
+      }
+    }
+
+  },
+  watch: {
+    imgStatus () {
+      if (this.imgStatus === 'finished') {
+        this.submit()
+      }
+    }
+  },
+  destoryed () {
+    this.imgs = []
+  },
+  created () {
+    this.getDate()
+    this._getWxConfigInfo()
+  },
+  beforeDestroy () {
+    clearInterval(this.timer)
+  }
+}
+</script>
+
+<style>
+.theme {
+  width: 60%;
+  background: #ddf0dc;
+  color: #477849;
+  font-size: 1.5rem;
+  margin: 40px auto 0;
+  text-align: center;
+  padding: 15px;
+}
+
+.appointmentBox {
+  margin: 5px;
+  text-align: center;
+}
+
+button {
+  width: 80% !important;
+  margin: 30px auto 20px;
+}
+
+fieldset {
+  margin: 30px auto 0;
+  padding: 0px auto;
+  width: 70%;
+  border-color: #b1afb2;
+  border-width: 1px;
+  border-radius: 7px;
+}
+
+legend {
+  margin-left: 15px;
+  margin-bottom: -5px;
+}
+
+input {
+  background: rgba(0, 0, 0, 0);
+  border-style: hidden;
+  width: 95%;
+  height: 35px;
+  margin-left: 2%;
+  margin-bottom: 1%;
+  outline: none;
+  caret-color: #71abce;
+}
+
+.picker {
+  position: static;
+  text-align: center;
+}
+
+.test .vux-popup-picker-select {
+  width: 100%;
+  position: static;
+  text-align: center !important;
+}
+
+.uploadImg {
+  margin: 30px 16%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.file {
+  position: relative;
+  display: inline-block;
+  background: #d0eeff;
+  border: 1px solid #99d3f5;
+  border-radius: 4px;
+  padding: 4px 12px;
+  overflow: hidden;
+  height: 20px;
+  color: #1e88c7;
+  text-decoration: none;
+  text-indent: 0;
+  line-height: 20px;
+}
+.file input {
+  position: absolute;
+  font-size: 100px;
+  right: 0;
+  top: 0;
+  opacity: 0;
+}
+.file:hover {
+  background: #aadffd;
+  border-color: #78c3f3;
+  color: #004974;
+  text-decoration: none;
+}
+</style>

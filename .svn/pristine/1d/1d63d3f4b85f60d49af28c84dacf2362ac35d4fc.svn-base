@@ -1,0 +1,39 @@
+// The Vue build version to load with the `import` command
+// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
+import Vue from 'vue'
+import FastClick from 'fastclick'
+import VueRouter from 'vue-router'
+import App from './App'
+import router from './router/index'
+// import Home from './components/HelloFromVux'
+
+import Vuex from 'vuex'
+import uploader from 'vue-easy-uploader'
+
+import { WechatPlugin } from 'vux'
+// Vue.http.post('/api').then()
+require('./utils/vConsole.js')
+Vue.use(WechatPlugin)
+Vue.use(VueRouter)
+Vue.use(Vuex)
+// const routes = [{
+//   path: '/',
+//   component: Home
+// }]
+
+// const router = new VueRouter({
+//   routes
+// })
+console.log(Vue.wechat)
+FastClick.attach(document.body)
+
+Vue.config.productionTip = false
+let store = new Vuex.Store({})
+Vue.use(uploader, store)
+/* eslint-disable no-new */
+new Vue({
+  // uploader,
+  router,
+  store,
+  render: h => h(App)
+}).$mount('#app-box')

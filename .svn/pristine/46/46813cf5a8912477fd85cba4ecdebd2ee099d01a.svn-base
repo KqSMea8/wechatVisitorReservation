@@ -1,0 +1,296 @@
+<template>
+  <div class="appointmentBox">
+    <flexbox>
+      <flexbox-item>
+        <p class="theme">请填写邀请信息</p>
+        <form>
+          <fieldset>
+            <legend>贵宾姓名</legend>
+            <x-input type="text"
+                     required
+                     style="position:static"></x-input>
+          </fieldset>
+        </form>
+        <form>
+          <fieldset>
+            <legend>对方手机</legend>
+            <x-input type="text"
+                     mask="999 9999 9999"
+                     v-model="data.phone"
+                     required
+                     style="position:static"></x-input>
+          </fieldset>
+        </form>
+        <form>
+          <fieldset>
+            <legend>来访时间</legend>
+            <datetime-range title=""
+                            :start-date="startDate"
+                            :end-date="endDate"
+                            :format="'YYYY年MM月DD日'"
+                            v-model="value"
+                            @on-change="onChange"
+                            class="test"></datetime-range>
+          </fieldset>
+        </form>
+        <form>
+          <form>
+            <fieldset>
+              <legend>截至时间</legend>
+              <datetime-range title=""
+                              :start-date="startDate1"
+                              :end-date="endDate1"
+                              :format="'YYYY年MM月DD日'"
+                              v-model="value1"
+                              @on-change="onChange"
+                              class="test"></datetime-range>
+            </fieldset>
+          </form>
+          <fieldset>
+            <legend>到访人数</legend>
+            <popup-picker title=""
+                          :data="list1"
+                          v-model="value2"
+                          @on-show="onShow"
+                          @on-hide="onHide"
+                          @on-change="onChange"
+                          class="test"
+                          style="position:static"></popup-picker>
+          </fieldset>
+        </form>
+        <form>
+          <fieldset>
+            <legend>到访事由</legend>
+            <popup-picker title=""
+                          :data="list2"
+                          v-model="value3"
+                          @on-show="onShow"
+                          @on-hide="onHide"
+                          @on-change="onChange"
+                          class="test"
+                          style="position:static"></popup-picker>
+          </fieldset>
+          <fieldset>
+            <legend>车牌号码</legend>
+            <x-input type="text"
+                     placeholder="(选填)"
+                     @on-focus="onFocus"
+                     @on-blur="onBlur"
+                     style="position:static"></x-input>
+          </fieldset>
+        </form>
+      </flexbox-item>
+    </flexbox>
+    <flexbox>
+      <flexbox-item>
+        <x-button @click.native="showPosition('middle')"
+                  type="primary">提交</x-button>
+      </flexbox-item>
+      <toast v-model="showPositionValue"
+             type="text"
+             :time="800"
+             is-show-mask
+             text="提交成功"
+             :position="position"
+             @on-hide="skip">{{
+        'Basic Usage' }}</toast>
+    </flexbox>
+  </div>
+</template>
+<script>
+import {
+  Flexbox,
+  FlexboxItem,
+  Group,
+  Cell,
+  XInput,
+  XTextarea,
+  XButton,
+  XNumber,
+  PopupRadio,
+  CellFormPreview,
+  Qrcode,
+  Divider,
+  Datetime,
+  PopupPicker,
+  DatetimeRange,
+  Toast
+} from 'vux'
+import { getDate } from '../../utils/getday.js'
+import { upDate } from '../../utils/upday.js'
+
+export default {
+  name: '',
+  components: {
+    Flexbox,
+    FlexboxItem,
+    Group,
+    Cell,
+    XInput,
+    XTextarea,
+    XButton,
+    XNumber,
+    PopupRadio,
+    CellFormPreview,
+    Qrcode,
+    Divider,
+    Datetime,
+    PopupPicker,
+    DatetimeRange,
+    Toast
+  },
+  data () {
+    return {
+      data: {
+        phone: ''
+      },
+      startDate: '',
+      endDate: '',
+      startDate1: '',
+      endDate1: '',
+      msg: '',
+      value: ['2018-09-15', '03', '05'],
+      value1: ['2018-09-15', '03', '05'],
+      title1: '默认4小时',
+      title2: '参观预约',
+      list1: [['1', '2', '3', '4', '5', '6', '7', '8', '9', '10人及其以上']],
+      list2: [['预约参观', '邀请访问']],
+      value2: ['请选择人数'],
+      value3: ['预约参观'],
+      position: 'default',
+      showPositionValue: false
+    }
+  },
+
+  methods: {
+    isVehicleNo (str) {
+      return /^(([\u4E00-\u9FA5][A-Z](([0-9]{5}[DF])|([DF]([A-HJ-NP-Z0-9])[0-9]{4})))|([\u4E00-\u9FA5][A-Z][A-HJ-NP-Z0-9]{4}[A-HJ-NP-Z0-9挂学警港澳使领]))$/.test(
+        str
+      )
+    },
+    onFocus (val) {
+      console.log(val)
+    },
+    onBlur (val) {
+      console.log(val)
+      console.log(this.isVehicleNo(val))
+      console.log(!this.isVehicleNo(val))
+      if (val) {
+        if (!this.isVehicleNo(val) === true) {
+          event.target.parentNode.parentNode.classList.add('weui-cell_warn')
+        } else {
+          if (
+            event.target.parentNode.parentNode.classList.contains(
+              'weui-cell_warn'
+            )
+          ) {
+            event.target.parentNode.parentNode.classList.remove(
+              'weui-cell_warn'
+            )
+          }
+        }
+      }
+    },
+    // onChange (val) {
+    //   console.log('val change', val)
+    // },
+    onShow () {
+      console.log('on show')
+    },
+    onHide (type) {
+      console.log('on hide', type)
+    },
+    setDate () {
+      let arr = getDate()
+      console.log(arr)
+      this.startDate = arr[0]
+      this.endDate = arr[1]
+    },
+    upDate () {
+      let arr = upDate()
+      console.log(arr)
+      this.startDate1 = arr[0]
+      this.endDate1 = arr[1]
+    },
+    showPosition (position) {
+      this.position = position
+      this.showPositionValue = true
+    },
+    onChange (val) {
+      // const _this = this
+      if (val) {
+        this.$vux.toast.show({
+          text: 'Hello World'
+        })
+      } else {
+        this.$vux.toast.hide()
+      }
+    },
+    skip () {
+      this.$router.push({
+        path: '/'
+      })
+    }
+  },
+  created () {
+    this.setDate()
+    this.upDate()
+  },
+  beforeDestroy () {
+    clearInterval(this.timer)
+  }
+}
+</script>
+
+<style>
+.theme {
+  width: 60%;
+  background: #ddf0dc;
+  color: #477849;
+  font-size: 1.5rem;
+  margin: 40px auto 0;
+  text-align: center;
+  padding: 15px;
+}
+
+.appointmentBox {
+  margin: 5px;
+  text-align: center;
+}
+
+button {
+  width: 80% !important;
+  margin: 30px auto 20px;
+}
+
+fieldset {
+  margin: 30px auto 0;
+  padding: 0px auto;
+  width: 70%;
+  border-color: #b1afb2;
+  border-width: 1px;
+  border-radius: 7px;
+}
+
+legend {
+  margin-left: 15px;
+  margin-bottom: -5px;
+}
+
+input {
+  background: rgba(0, 0, 0, 0);
+  border-style: hidden;
+  width: 95%;
+  height: 35px;
+  margin-left: 2%;
+  margin-bottom: 1%;
+  outline: none;
+  caret-color: #71abce;
+}
+
+.test .vux-popup-picker-select {
+  width: 100%;
+  position: static;
+  text-align: center !important;
+}
+</style>

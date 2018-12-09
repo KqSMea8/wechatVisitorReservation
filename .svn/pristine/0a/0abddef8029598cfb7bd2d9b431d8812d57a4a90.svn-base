@@ -1,0 +1,95 @@
+<template>
+    <div class="appointmentBox">
+        <div>
+            <group>
+                <form-preview :header-label="'访问信息'" :body-items="list" :footer-buttons="buttons"></form-preview>
+            </group>
+        </div>
+        <group>
+            <form-preview :header-label="'访问信息'" :body-items="list" :footer-buttons="buttons" name="demo"></form-preview>
+        </group>
+        <group>
+            <form-preview :header-label="'访问信息'" :body-items="list" :footer-buttons="buttons"></form-preview>
+        </group>
+    </div>
+</template>
+<script>
+    import {
+        Flexbox,
+        FlexboxItem,
+        Group,
+        FormPreview
+    } from 'vux'
+export default {
+      components: {
+        Flexbox,
+        FlexboxItem,
+        Group,
+        FormPreview
+      },
+      data () {
+        return {
+          list: [{
+            label: '访客名称',
+            value: '访客刘'
+          }, {
+            label: '访客电话',
+            value: '12345678912'
+          }, {
+            label: '员工姓名',
+            value: '唐经理'
+          },
+          {
+            label: '员工电话',
+            value: '12345678912'
+          },
+          {
+            label: '来访时间',
+            value: '2018-09-17 16：47'
+          },
+          {
+            label: '预约事由',
+            value: '参观预约'
+          },
+          {
+            label: '到访人数',
+            value: '2'
+          },
+          {
+            label: '访客身份证号码',
+            value: '350123199704170915'
+          },
+          {
+            label: '车牌号',
+            value: '闽A12354'
+          }
+          ],
+          buttons: [{
+            style: 'primary',
+            text: '详情',
+            onButtonClick: () => {
+              this.$router.push({
+                path: '/invitedetails'
+              })
+            }
+          },
+          {
+            style: 'primary',
+            text: '填充',
+            link: '/reservation'
+          }
+          ]
+        }
+      },
+      methods: {
+
+      }
+
+    }
+</script>
+<style>
+    .appointmentBox {
+        margin: 15px;
+        text-align: center;
+    }
+</style>

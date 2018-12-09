@@ -1,0 +1,35 @@
+import request from '@/config/request'
+
+// 通过 code 获取微信 openid，同时获取注册标记
+export function getUserInfoByCode (code) {
+  return request({
+    url: '/wechat/mp/getUserInfoByCode',
+    method: 'post',
+    data: { code }
+  })
+}
+
+// 获取验证码
+export function getValidateCode (telephone) {
+  return request({
+    url: '/user/sendMessage',
+    method: 'post',
+    data: { telephone }
+  })
+}
+
+export function getStaffInfo (trueName, telephone, personNo, identifyNo, code) {
+  return request({
+    url: '/user/saveStaff',
+    method: 'post',
+    data: { trueName, telephone, personNo, identifyNo, code }
+  })
+}
+// 员工注册
+export function setVisitorInfo (trueName, telephone, identifyNo, code) {
+  return request({
+    url: '/user/saveVistor',
+    method: 'post',
+    data: { trueName, telephone, identifyNo, code }
+  })
+}

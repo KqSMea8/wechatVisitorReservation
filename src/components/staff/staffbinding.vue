@@ -1,0 +1,320 @@
+<template>
+  <div class="box">
+    <flexbox>
+      <p class="theme">请先绑定员工信息</p>
+    </flexbox>
+    <!-- <fieldset>
+      <legend>您的姓名</legend>
+      <x-input type="text"
+               v-model="userInfo.name"
+               required
+               style="position:static"></x-input>
+    </fieldset> -->
+    <fieldset>
+      <legend>您的手机</legend>
+      <x-input type="text"
+               placeholder="必填"
+               mask="99999999999"
+               v-model="phone"
+               is-type="china-mobile"
+               style="position:static"
+               required></x-input>
+    </fieldset>
+    <fieldset>
+      <legend>您的工号</legend>
+      <x-input type="text"
+               v-model="userInfo.personNo"
+               style="position:static"
+               required></x-input>
+    </fieldset>
+    <fieldset>
+      <legend>您的身份证</legend>
+      <x-input v-model="userInfo.IDcard"
+               keyboard="number"
+               @on-blur="isIDcard"
+               :is-type="IdentityCodeValid"
+               placeholder="（请填写正确的身份证格式）"
+               style="color:black;position:static"
+               ref="refcode"
+               @on-change="keyDown"
+               required></x-input>
+    </fieldset>
+    <fieldset style="width:35% ; display:inline-block; margin-left:15%">
+      <legend>验证码</legend>
+      <x-input type="text"
+               v-model="userInfo.verifyCode"
+               style="position:static"
+               required></x-input>
+    </fieldset>
+    <button v-show="sendAuthCode"
+            @click="getAuthCode"
+            class="getButton"
+            style="padding:10px 0px">获取验证码</button>
+    <span v-show="!sendAuthCode"><span>{{auth_time}} </span> 秒后重新发送验证码</span>
+    <x-button type="primary"
+              @click.native="showPosition('middle')"
+              style="width:70% ; margin-top:5%">提交</x-button>
+    <toast v-model="showPositionValue"
+           type="text"
+           :time="800"
+           is-show-mask
+           :text="toastText"
+           :position="position">{{toastText }}</toast>
+
+  </div>
+</template>
+<script>
+import { getValidateCode, setStaffInfo } from '../../api/api.js'
+import {
+  Countdown,
+  Flexbox,
+  FlexboxItem,
+  XInput,
+  XButton,
+  Toast,
+  ToastPlugin,
+  AlertModule
+} from 'vux'
+
+export default {
+  components: {
+    Countdown,
+    Flexbox,
+    FlexboxItem,
+    XInput,
+    XButton,
+    Toast,
+    ToastPlugin,
+    AlertModule
+  },
+  data () {
+    return {
+      sendAuthCode: true,
+      auth_time: 0,
+      userInfo: {
+        name: '',
+        IDcard: '',
+        verifyCode: '',
+        personNo: ''
+      },
+      phone: '',
+      personNo: '',
+      position: 'default',
+      toastText: '',
+      showPositionValue: false
+      // codeValue: function (value) {
+      //   return {
+      //     valid: this.IdentityCodeValid(value),
+      //     msg: '验证码有误!'
+      //   }
+      // }
+    }
+  },
+  methods: {
+    keyDown () {
+      // console.log(this.$refs.userInfo.IDcard.validate())
+      console.log(this.$refs.refcode.valid)
+      if (this.$refs.refcode.valid === true && this.code !== '') {
+        this.disabled = false
+        console.log('成功')
+      } else {
+        this.disabled = true
+        console.log('失败')
+      }
+    },
+    getAuthCode: function () {
+      this.sendAuthCode = false
+      this.auth_time = 60
+      var authTimetimer = setInterval(() => {
+        this.auth_time--
+        if (this.auth_time <= 0) {
+          this.sendAuthCode = true
+          clearInterval(authTimetimer)
+        }
+      }, 1000)
+
+      console.log(this.phone)
+
+      let telephone = this.phone
+
+      getValidateCode(telephone).then((res) => {
+        console.log(res)
+        if (res.data.data === 1) {
+          console.log('成功')
+        } else {
+          console.log('失败')
+        }
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+    showPosition (position) {
+      let vm = this
+      this.position = position
+      this.showPositionValue = true
+      // let trueName = this.userInfo.name
+      // if (trueName === '') {
+      //   AlertModule.show({
+      //     title: '请填写您的姓名'
+      //   })
+      //   return
+      // }
+      let telephone = this.phone
+      if (telephone === '') {
+        AlertModule.show({
+          title: '请填写您的电话'
+        })
+        return
+      }
+      let identifyNo = this.userInfo.IDcard
+      if (identifyNo === '') {
+        AlertModule.show({
+          title: '请填写您的身份证'
+        })
+        return
+      }
+      let verifyCode = this.userInfo.verifyCode
+      if (verifyCode === '') {
+        AlertModule.show({
+          title: '请填写验证码'
+        })
+        return
+      }
+      let personNo = this.userInfo.personNo
+      // if (personNo === '') {
+      //   AlertModule.show({
+      //     title: '请填写您的工号'
+      //   })
+      //   return
+      // }
+      console.log(personNo)
+      setStaffInfo(telephone, personNo, identifyNo, verifyCode).then((res) => {
+        console.log(res)
+        if (res.data.data === 1) {
+          vm.toastText = '注册成功'
+          vm.showPositionValue = true
+          let resVisitorTag = '1'
+          localStorage.setItem('resVisitorTag', resVisitorTag)
+          console.log('员工绑定页面设置 resVisitorTag 成功')
+          setTimeout(() => {
+            vm.skip()
+          }, 2000)
+        } else if (res.data.data === -1) {
+          this.showPositionValue = true
+          this.toastText = '注册错误'
+        } else if (res.data.data === -2) {
+          this.showPositionValue = true
+          this.toastText = '验证码错误或者过期'
+        } else if (res.data.data === -3) {
+          this.showPositionValue = true
+          this.toastText = '手机号已注册'
+        } else if (res.data.data === -4) {
+          this.showPositionValue = true
+          this.toastText = '员工信息不存在'
+        }
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+    onChange (val) {
+      // const _this = this
+      if (val) {
+        this.$vux.toast.show({
+          text: 'Hello World'
+        })
+      } else {
+        this.$vux.toast.hide()
+      }
+    },
+    skip () {
+      window.router.push({
+        path: '/'
+      })
+    },
+    isIDcard (val) {
+      if (val) {
+        if (!this.IdentityCodeValid(val) === true) {
+          event.target.parentNode.parentNode.classList.add('weui-cell_warn')
+        } else {
+          if (
+            event.target.parentNode.parentNode.classList.contains(
+              'weui-cell_warn'
+            )
+          ) {
+            event.target.parentNode.parentNode.classList.remove(
+              'weui-cell_warn'
+            )
+          }
+        }
+      }
+    },
+    IdentityCodeValid (code) {
+      console.log(code)
+      var pattern = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/
+      console.log(11)
+
+      if (code.length === 18) {
+        return { valid: pattern.test(code) }
+      }
+    }
+  },
+  beforeDestroy () {
+    clearInterval(this.timer)
+  }
+}
+</script>
+<style>
+.box {
+  margin: 0px;
+}
+
+.theme {
+  width: 60%;
+  background: #ddf0dc;
+  color: #477849;
+  font-size: 1.5rem;
+  margin: 40px auto 0;
+  text-align: center;
+  padding: 15px;
+}
+
+.getButton {
+  background-color: #1aad19;
+  width: 32% !important;
+  color: white;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  font-size: 18px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 5px;
+  outline: 0;
+  border-width: 0;
+}
+
+fieldset {
+  margin: 30px auto 0;
+  padding: 0px auto;
+  width: 70%;
+  border-color: #b1afb2;
+  border-width: 1px;
+  border-radius: 7px;
+}
+
+legend {
+  margin-left: 15px;
+  margin-bottom: -5px;
+}
+
+input {
+  background: rgba(0, 0, 0, 0);
+  border-style: hidden;
+  width: 95%;
+  height: 35px;
+  margin-left: 2%;
+  margin-bottom: 1%;
+  outline: none;
+  caret-color: #71abce;
+}
+</style>

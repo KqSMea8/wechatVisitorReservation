@@ -1,0 +1,185 @@
+<template>
+  <div class="box">
+    <flexbox>
+      <flexbox-item>
+        <cell title="详细信息"></cell>
+        <x-table>
+          <thead>
+            <tr>
+              <th>目录</th>
+              <th>详细信息</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>员工姓名</td>
+              <td>{{resTrueName}}</td>
+            </tr>
+            <tr>
+              <td>访客姓名</td>
+              <td>{{visTrueName}}</td>
+            </tr>
+            <tr>
+              <td>员工电话</td>
+              <td>{{resTelephone}}</td>
+            </tr>
+            <tr>
+              <td>访客电话</td>
+              <td>{{visTelephone}}</td>
+            </tr>
+            <tr>
+              <td>来访时间</td>
+              <td>{{entryTime}}</td>
+            </tr>
+            <tr>
+              <td>访问事由</td>
+              <td>{{visitorType}}</td>
+            </tr>
+
+            <tr>
+              <td>访问人数</td>
+              <td>{{visNum}}</td>
+            </tr>
+            <tr>
+              <td>车牌号</td>
+              <td>{{carNumber}}</td>
+            </tr>
+            <tr>
+              <td>身份证号</td>
+              <td>{{identifyNo}}</td>
+            </tr>
+            <tr>
+              <td>审批状态</td>
+              <td>{{recordState}}</td>
+            </tr>
+
+          </tbody>
+        </x-table>
+        <divider>{{ "您的凭证" }}</divider>
+        <qrcode style="text-align:center"
+                v-model="qrUrl"
+                type="img"
+                v-show="status"></qrcode>
+      </flexbox-item>
+    </flexbox>
+  </div>
+</template>
+<script>
+import { getVisRecordDetails } from '../../api/api.js'
+import {
+  Flexbox,
+  FlexboxItem,
+  Group,
+  Cell,
+  XInput,
+  XTextarea,
+  XButton,
+  XNumber,
+  PopupRadio,
+  CellFormPreview,
+  Qrcode,
+  Divider,
+  Datetime,
+  PopupPicker,
+  XTable
+} from 'vux'
+export default {
+  name: '',
+  components: {
+    Flexbox,
+    FlexboxItem,
+    Group,
+    Cell,
+    XInput,
+    XTextarea,
+    XButton,
+    XNumber,
+    PopupRadio,
+    CellFormPreview,
+    Qrcode,
+    Divider,
+    Datetime,
+    PopupPicker,
+    XTable
+  },
+  data () {
+    return {
+      status: false,
+      resTelephone: '',
+      visTelephone: '',
+      visitorType: '',
+      resTrueName: '',
+      visTrueName: '',
+      entryTime: '',
+      visNum: '',
+      carNumber: '',
+      identifyNo: '',
+      qrUrl: '',
+      recordState: '',
+      list: []
+    }
+  },
+  methods: {
+    Render () {
+      if (this.$route.query.flag === 1) {
+        this.resTelephone = this.$route.query.resTelephone
+        this.visTelephone = this.$route.query.visTelephone
+        this.visitorType = this.$route.query.visitorType
+        this.resTrueName = this.$route.query.resTrueName
+        this.visTrueName = this.$route.query.visTrueName
+        this.entryTime = this.$route.query.entryTime
+        this.visNum = this.$route.query.visNum
+        this.carNumber = this.$route.query.carNumber
+        this.identifyNo = this.$route.query.identifyNo
+        this.qrUrl = this.$route.query.qrUrl
+        let state = this.$route.query.recordState
+        if (state === 'wait') {
+          this.recordState = '待审批'
+        } else if (state === 'agree') {
+          this.recordState = '同意'
+          this.status = true
+        } else if (state === 'disagree') {
+          this.recordState = '不同意'
+        }
+      } else {
+        getVisRecordDetails().then((res) => {
+          console.log(res)
+          this.resTelephone = res.data.data.resTelephone
+          this.visTelephone = res.data.data.visTelephone
+          this.visitorType = res.data.data.visitorType
+          this.resTrueName = res.data.data.resTrueName
+          this.visTrueName = res.data.data.visTrueName
+          this.entryTime = res.data.data.entryTime
+          this.visNum = res.data.data.visNum
+          this.carNumber = res.data.data.carNumber
+          this.identifyNo = res.data.data.identifyNo
+          this.qrUrl = res.data.data.qrUrl
+          let state = res.data.data.recordState
+          if (state === 'wait') {
+            this.recordState = '待审批'
+          } else if (state === 'agree') {
+            this.recordState = '同意'
+          } else if (state === 'disagree') {
+            this.recordState = '不同意'
+          }
+        })
+      }
+    }
+  },
+  created () {
+    this.Render()
+  }
+
+}
+</script>
+<style>
+.box {
+  margin: 20px;
+  text-align: center;
+}
+
+.liststyle {
+  color: black !important;
+  text-align: center;
+}
+</style>

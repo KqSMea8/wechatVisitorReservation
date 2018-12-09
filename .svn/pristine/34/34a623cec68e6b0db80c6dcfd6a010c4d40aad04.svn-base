@@ -1,0 +1,354 @@
+<template>
+  <div class="appointmentBox">
+    <flexbox>
+      <flexbox-item>
+        <p class="theme">请填写您的信息</p>
+        <form>
+          <fieldset>
+            <legend>您的姓名</legend>
+            <x-input type="text"
+                     v-model="userInfo.name"
+                     placeholder="(必填)"
+                     style="position: static"
+                     required></x-input>
+          </fieldset>
+        </form>
+        <form>
+          <fieldset>
+            <legend>您的手机</legend>
+            <x-input type="text"
+                     v-model="userInfo.phone"
+                     style="position: static"></x-input>
+          </fieldset>
+        </form>
+        <form>
+          <fieldset>
+            <legend>身份证号</legend>
+            <x-input v-model="userInfo.IDcard"
+                     keyboard="number"
+                     @on-blur="isIDcard"
+                     placeholder="(选填)"
+                     style="color:black;position:static"></x-input>
+          </fieldset>
+        </form>
+        <fieldset style="width:35% ; display:inline-block; margin-left:15%">
+          <legend>验证码</legend>
+          <x-input type="text"
+                   v-model="userInfo.verifyCode"
+                   style="position:static"
+                   required></x-input>
+        </fieldset>
+        <button v-show="sendAuthCode"
+                @click="getAuthCode"
+                class="getButton"
+                style="padding:10px 0px">获取验证码</button>
+        <span v-show="!sendAuthCode"><span>{{auth_time}} </span> 秒后重新发送验证码</span>
+
+        <x-button type="primary"
+                  @click.native="showPosition()"
+                  class="vbutton"
+                  style="width: 70%;">提交</x-button>
+      </flexbox-item>
+      <toast v-model="showPositionValue"
+             type="text"
+             :time="800"
+             is-show-mask
+             :text="toastText"
+             :position="'middle'">{{
+        'Basic Usage' }}</toast>
+    </flexbox>
+  </div>
+
+</template>
+
+<script>
+import { getValidateCode, setVisitorInfo } from '../../api/api.js'
+
+import {
+  Flexbox,
+  FlexboxItem,
+  Group,
+  Cell,
+  XInput,
+  XTextarea,
+  XButton,
+  XNumber,
+  PopupRadio,
+  CellFormPreview,
+  Qrcode,
+  Divider,
+  Datetime,
+  Toast
+} from 'vux'
+
+export default {
+  name: '',
+  components: {
+    Flexbox,
+    FlexboxItem,
+    Group,
+    Cell,
+    XInput,
+    XTextarea,
+    XButton,
+    XNumber,
+    PopupRadio,
+    CellFormPreview,
+    Qrcode,
+    Divider,
+    Datetime,
+    Toast
+  },
+  data () {
+    return {
+      sendAuthCode: true,
+      auth_time: 0,
+      imgs: [],
+      msg: '',
+      position: 'default',
+      showPositionValue: false,
+      userInfo: {
+        name: '',
+        phone: '',
+        IDcard: '',
+        company: '',
+        verifyCode: ''
+      },
+      toastText: ''
+    }
+  },
+
+  methods: {
+    isIDcard (val) {
+      if (val) {
+        if (!this.IdentityCodeValid(val) === true) {
+          event.target.parentNode.parentNode.classList.add('weui-cell_warn')
+        } else {
+          if (
+            event.target.parentNode.parentNode.classList.contains(
+              'weui-cell_warn'
+            )
+          ) {
+            event.target.parentNode.parentNode.classList.remove(
+              'weui-cell_warn'
+            )
+          }
+        }
+      }
+    },
+    IdentityCodeValid (code) {
+      var city = {
+        11: '北京',
+        12: '天津',
+        13: '河北',
+        14: '山西',
+        15: '内蒙古',
+        21: '辽宁',
+        22: '吉林',
+        23: '黑龙江 ',
+        31: '上海',
+        32: '江苏',
+        33: '浙江',
+        34: '安徽',
+        35: '福建',
+        36: '江西',
+        37: '山东',
+        41: '河南',
+        42: '湖北 ',
+        43: '湖南',
+        44: '广东',
+        45: '广西',
+        46: '海南',
+        50: '重庆',
+        51: '四川',
+        52: '贵州',
+        53: '云南',
+        54: '西藏 ',
+        61: '陕西',
+        62: '甘肃',
+        63: '青海',
+        64: '宁夏',
+        65: '新疆',
+        71: '台湾',
+        81: '香港',
+        82: '澳门',
+        91: '国外 '
+      }
+      var tip = ''
+      var pass = true
+
+      if (
+        !code ||
+        !/^\d{6}(18|19|20)?\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}(\d|X)$/i.test(
+          code
+        )
+      ) {
+        tip = '身份证号格式错误'
+        pass = false
+      } else if (!city[code.substr(0, 2)]) {
+        tip = '地址编码错误'
+        pass = false
+      } else {
+        // 18位身份证需要验证最后一位校验位
+        if (code.length === 18) {
+          code = code.split('')
+          // ∑(ai×Wi)(mod 11)
+          // 加权因子
+          var factor = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
+          // 校验位
+          var parity = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2]
+          var sum = 0
+          var ai = 0
+          var wi = 0
+          for (var i = 0; i < 17; i++) {
+            ai = code[i]
+            wi = factor[i]
+            sum += ai * wi
+          }
+          // var last = parity[sum % 11]
+          if (parity[sum % 11] !== code[17]) {
+            tip = '校验位错误'
+            pass = false
+          }
+        }
+      }
+      if (!pass) alert(tip)
+      return pass
+    },
+    showPosition () {
+      // this.position = position
+      let trueName = this.userInfo.name
+      let telephone = this.userInfo.phone
+      let identifyNo = this.userInfo.IDcard
+      let verifyCode = this.userInfo.verifyCode
+
+      console.log(this.userInfo)
+
+      setVisitorInfo(trueName, telephone, identifyNo, verifyCode).then((res) => {
+        console.log(res)
+        let code = res.data.data
+        if (code === 1) {
+          this.toastText = '注册成功'
+          this.skip()
+        } else if (code === -1) {
+          this.toastText = '注册错误'
+        } else if (code === -2) {
+          this.toastText = '验证码错误或者过期'
+        } else if (code === -3) {
+          this.toastText = '手机号已注册'
+        }
+        this.showPositionValue = true
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+
+    getAuthCode: function () {
+      this.sendAuthCode = false
+      this.auth_time = 60
+      var authTimetimer = setInterval(() => {
+        this.auth_time--
+        if (this.auth_time <= 0) {
+          this.sendAuthCode = true
+          clearInterval(authTimetimer)
+        }
+      }, 1000)
+
+      let telephone = this.userInfo.phone
+
+      getValidateCode(telephone).then((res) => {
+        console.log(res)
+        if (res.data.data === 1) {
+          this.toastText = '获取验证码成功'
+          this.showPositionValue = true
+        } else {
+          this.toastText = '获取验证码失败'
+          this.showPositionValue = true
+        }
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+    onChange (val) {
+      // const _this = this
+      if (val) {
+        this.$vux.toast.show({
+          text: 'Hello World'
+        })
+      } else {
+        this.$vux.toast.hide()
+      }
+    },
+    skip () {
+      this.$router.push({
+        path: '/visitorHomepage'
+      })
+    }
+  },
+  beforeDestroy () {
+    clearInterval(this.timer)
+  }
+
+}
+</script>
+
+<style>
+.theme {
+  width: 60%;
+  background: #ddf0dc;
+  color: #477849;
+  font-size: 1.5rem;
+  margin: 40px auto 0;
+  text-align: center;
+  padding: 15px;
+}
+.getButton {
+  background-color: #1aad19;
+  width: 32%;
+  color: white;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  font-size: 18px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 5px;
+  outline: 0;
+  border-width: 0;
+}
+
+.appointmentBox {
+  margin: 5px;
+  text-align: center;
+}
+
+button {
+  width: 70%;
+  margin: 30px auto 20px;
+}
+
+fieldset {
+  margin: 30px auto 0;
+  padding: 0px auto;
+  width: 70%;
+  border-color: #b1afb2;
+  border-width: 1px;
+  border-radius: 7px;
+}
+
+legend {
+  margin-left: 15px;
+  margin-bottom: -5px;
+}
+
+input {
+  background: rgba(0, 0, 0, 0);
+  border-style: hidden;
+  width: 95%;
+  height: 35px;
+  margin-left: 2%;
+  margin-bottom: 1%;
+  outline: none;
+  caret-color: #71abce;
+}
+</style>

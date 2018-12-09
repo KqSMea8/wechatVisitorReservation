@@ -1,0 +1,24 @@
+import request from '@/config/request'
+
+// 获取验证码
+export function getValidateCode (telephone) {
+  return request({
+    url: '/user/sendMessage',
+    method: 'post',
+    data: { telephone }
+  })
+}
+export function getStaffInfo (trueName, telephone, personNo, identifyNo, code) {
+  return request({
+    url: '/user/saveStaff',
+    method: 'post',
+    data: { trueName, telephone, personNo, identifyNo, code }
+  })
+}
+export function getVisitorInfo (trueName, telephone, identifyNo, code) {
+  return request({
+    url: '/user/saveVistor',
+    method: 'post',
+    data: { trueName, telephone, identifyNo, code }
+  })
+}

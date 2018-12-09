@@ -1,0 +1,226 @@
+<template>
+  <div class="box">
+    <group>
+      <cell title="详细信息"></cell>
+      <cell-form-preview :list="list"></cell-form-preview>
+    </group>
+    <div>
+      <x-button type="primary"
+                :text="submit1"
+                :disabled="disable1"
+                @click.native="processButton1"
+                style="width:40%;display:inline-block;margin-right:17%;"></x-button>
+      <x-button type="primary"
+                :text="submit2"
+                :disabled="disable2"
+                @click.native="processButton2"
+                style="width:40%;display:inline-block;"></x-button>
+    </div>
+    <router-link to="/">
+      <x-button type="primary">返回</x-button>
+    </router-link>
+  </div>
+</template>
+<script>
+import { getVisRecordDetails, setrecordState
+} from '../../api/api.js'
+import {
+  Flexbox,
+  FlexboxItem,
+  Group,
+  Cell,
+  XInput,
+  XTextarea,
+  XButton,
+  XNumber,
+  PopupRadio,
+  CellFormPreview,
+  Qrcode,
+  Divider,
+  Datetime,
+  PopupPicker
+} from 'vux'
+export default {
+  components: {
+    Flexbox,
+    FlexboxItem,
+    Group,
+    Cell,
+    XInput,
+    XTextarea,
+    XButton,
+    XNumber,
+    PopupRadio,
+    CellFormPreview,
+    Qrcode,
+    Divider,
+    Datetime,
+    PopupPicker
+  },
+  data () {
+    return {
+      submit1: '拒绝预约',
+      disable1: false,
+      submit2: '同意预约',
+      disable2: false,
+      qrUrl: '',
+      recordState: '',
+      list: [{
+        label: '访客姓名',
+        value: '小豪'
+      },
+      {
+        label: '访客手机',
+        value: '12574585522'
+      },
+      {
+        label: '员工姓名',
+        value: '唐经理'
+      },
+      {
+        label: '员工手机',
+        value: '12574585522'
+      },
+      {
+        label: '邀访事由',
+        value: '预约参观'
+      }
+
+      ]
+    }
+  },
+  methods: {
+    change (value) {
+      console.log('change:', value)
+    },
+    processButton1 () {
+      this.submit2 = this.submit1 = '不同意'
+      this.recordState = 'disagree'
+      this.disable1 = this.disable2 = true
+      let recordState = this.recordState
+      setrecordState(recordState).then((res) => {
+        console.log(res)
+        if (res.data.data === 1) {
+          console.log('审批成功')
+        } else if (res.data.data === -1) {
+          console.log('审批失败')
+        }
+      })
+      setTimeout(() => {
+        this.skip()
+      }, 800)
+    },
+    processButton2 () {
+      this.submit2 = this.submit1 = '同意'
+      this.recordState = 'agree'
+      this.disable1 = this.disable2 = true
+      let recordState = this.recordState
+      setrecordState(recordState).then((res) => {
+        console.log(res)
+        if (res.data.data === 1) {
+          console.log('审批成功')
+        } else if (res.data.data === -1) {
+          console.log('审批失败')
+        }
+      })
+      setTimeout(() => {
+        this.skip()
+      }, 800)
+    },
+    Render () {
+      let vm = this
+      getVisRecordDetails().then((res) => {
+        console.log(res)
+        // for (let i = 0; i < res.data.data.length; i++)
+        // console.log(res.data.data)
+        vm.list = []
+        let lists = res.data.data
+        for (const key in lists) {
+          let obj = {}
+
+          if (key === 'resTelephone') {
+            obj.label = '员工电话'
+          } else if (key === 'visTelephone') {
+            obj.label = '访客电话'
+          } else if (key === 'resTrueName') {
+            obj.label = '员工姓名'
+          } else if (key === 'visTrueName') {
+            obj.label = '访客姓名'
+          } else if (key === 'carNumber') {
+            obj.label = '车牌号'
+          } else if (key === 'entryTime') {
+            obj.label = '来访时间'
+          } else if (key === 'visitorType') {
+            obj.label = '访问事由'
+          } else if (key === 'visNum') {
+            obj.label = '访问人数'
+          } else if (key === 'identifyNo') {
+            obj.label = '身份证号'
+          } else if (key === 'resOrgName') {
+            obj.label = '见面地点'
+          } else if (key === 'qrUrl') {
+            obj.label = '二维码地址'
+            let url = lists[key]
+            this.qrUrl = url
+            console.log('url', url)
+          } else if (key === 'recordState') {
+            obj.label = '审批状态'
+            let appStatus = lists[key]
+            this.recordState = appStatus
+            console.log('appStatus', this.recordState)
+            if (this.recordState === '待审批') {
+              this.disable1 = false
+              this.disable2 = false
+            } else if (this.recordState === 'agree') {
+              this.submit2 = this.submit1 = '同意'
+              this.disable1 = this.disable2 = true
+            } else if (this.recordState === 'disagree') {
+              this.submit2 = this.submit1 = '不同意'
+              this.disable1 = this.disable2 = true
+            }
+          }
+          obj.value = lists[key]
+          vm.list.push(obj)
+          // let del = vm.list.indexOf('二维码地址')
+          // vm.list.splice(del, 1)
+          // vm.list.remove(4)
+          // vm.list.splice(4, 1)
+          // console.log(key)
+          // console.log(lists[key])
+        }
+        // console.log(vm.list)
+      })
+    },
+    skip () {
+      this.$router.push({
+        path: '/'
+      })
+    }
+
+  },
+  created () {
+    this.Render()
+  }
+}
+</script>
+<style>
+div {
+  margin: 2% 0%;
+}
+
+p {
+  text-align: left;
+  padding: 10px 0px 0px 10px;
+  display: inline-block;
+}
+
+input {
+  padding: 1px 10px 1px;
+  border: 0px;
+}
+
+.box {
+  margin: 20px 20px 40px 20px;
+  text-align: center;
+}
+</style>

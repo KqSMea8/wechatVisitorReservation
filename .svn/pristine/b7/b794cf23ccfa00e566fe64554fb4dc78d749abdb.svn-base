@@ -1,0 +1,53 @@
+import request from '@/config/request'
+// 获取微信 config 的信息
+export function getWxConfigInfo (url) {
+  return request({
+    url: '/wechat/getTicket',
+    method: 'post',
+    data: { url }
+  })
+}
+
+// 通过 code 获取微信 openid，同时获取注册标记
+export function getUserInfoByCode (code) {
+  return request({
+    url: '/wechat/mp/getUserInfoByCode',
+    method: 'post',
+    data: { code }
+  })
+}
+
+// 获取验证码
+export function getValidateCode (telephone) {
+  return request({
+    url: '/user/sendMessage',
+    method: 'post',
+    data: { telephone }
+  })
+}
+
+export function setStaffInfo (trueName, telephone, personNo, identifyNo, code) {
+  return request({
+    url: '/user/saveStaff',
+    method: 'post',
+    data: { trueName, telephone, personNo, identifyNo, code }
+  })
+}
+// 员工注册
+export function setVisitorInfo (trueName, telephone, identifyNo, code) {
+  return request({
+    url: '/user/saveVistor',
+    method: 'post',
+    data: { trueName, telephone, identifyNo, code }
+  })
+}
+// 访客注册
+export function setInviteInfo (data) {
+  return request({
+    url: '/user/saveStaffRecord',
+    method: 'post',
+    header: 'multipart/form-data',
+    data: data
+  })
+}
+// 员工邀请

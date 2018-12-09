@@ -1,0 +1,127 @@
+<template>
+  <div class="box">
+    <flexbox>
+      <flexbox-item>
+        <group>
+          <cell title="详细信息"></cell>
+          <cell-form-preview :list="list"></cell-form-preview>
+        </group>
+        <divider>{{ "您的凭证" }}</divider>
+        <qrcode style="text-align:center"
+                v-model="qrUrl"
+                type="img"></qrcode>
+      </flexbox-item>
+    </flexbox>
+  </div>
+</template>
+<script>
+import { getResRecordDetails } from '../../api/api.js'
+import {
+  Flexbox,
+  FlexboxItem,
+  Group,
+  Cell,
+  XInput,
+  XTextarea,
+  XButton,
+  XNumber,
+  PopupRadio,
+  CellFormPreview,
+  Qrcode,
+  Divider,
+  Datetime,
+  PopupPicker
+} from 'vux'
+export default {
+  name: '',
+  components: {
+    Flexbox,
+    FlexboxItem,
+    Group,
+    Cell,
+    XInput,
+    XTextarea,
+    XButton,
+    XNumber,
+    PopupRadio,
+    CellFormPreview,
+    Qrcode,
+    Divider,
+    Datetime,
+    PopupPicker
+  },
+  data () {
+    return {
+      list: []
+    }
+  },
+  methods: {
+    Render () {
+      let vm = this
+      getResRecordDetails().then((res) => {
+        console.log(res)
+        // for (let i = 0; i < res.data.data.length; i++)
+        // console.log(res.data.data)
+        vm.list = []
+        let lists = res.data.data
+        for (const key in lists) {
+          let obj = {}
+
+          if (key === 'resTelephone') {
+            obj.label = '员工电话'
+          } else if (key === 'visTelephone') {
+            obj.label = '访客电话'
+          } else if (key === 'resTrueName') {
+            obj.label = '员工姓名'
+          } else if (key === 'visTrueName') {
+            obj.label = '访客姓名'
+          } else if (key === 'carNumber') {
+            obj.label = '车牌号'
+          } else if (key === 'entryTime') {
+            obj.label = '来访时间'
+          } else if (key === 'visitorType') {
+            obj.label = '访问事由'
+          } else if (key === 'visNum') {
+            obj.label = '访问人数'
+          } else if (key === 'identifyNo') {
+            obj.label = '身份证号'
+          } else if (key === 'resOrgName') {
+            obj.label = '见面地点'
+          } else if (key === 'qrUrl') {
+            obj.label = '二维码地址'
+            let url = lists[key]
+            this.qrUrl = url
+            continue
+          }
+          obj.value = lists[key]
+          if (obj.value === 'wait') {
+            obj.value = '待审批'
+          } else if (obj.value === 'agree') {
+            obj.value = '同意'
+          } else if (obj.value === 'disagree') {
+            obj.value = '不同意'
+          }
+          vm.list.push(obj)
+          console.log(key)
+          console.log(lists[key])
+        }
+        // console.log(vm.list)
+      })
+    }
+  },
+  created () {
+    this.Render()
+  }
+}
+</script>
+<style>
+.box {
+  margin: 20px;
+  text-align: center;
+}
+
+.liststyle {
+  color: black !important;
+  text-align: center;
+}
+</style>
